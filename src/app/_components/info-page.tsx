@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { Icon, type IconName } from "./icon";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
@@ -17,9 +19,10 @@ type InfoPageProps = {
   sections: InfoSection[];
   asideTitle: string;
   asideItems: string[];
+  children?: ReactNode;
 };
 
-export function InfoPage({ activePage, icon, title, description, sections, asideTitle, asideItems }: InfoPageProps) {
+export function InfoPage({ activePage, icon, title, description, sections, asideTitle, asideItems, children }: InfoPageProps) {
   return (
     <>
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
@@ -68,6 +71,8 @@ export function InfoPage({ activePage, icon, title, description, sections, aside
             </article>
           ))}
         </section>
+
+        {children}
       </main>
 
       <SiteFooter />
