@@ -1,16 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "../_components/icon";
 import { SiteFooter } from "../_components/site-footer";
 import { SiteHeader } from "../_components/site-header";
-import { getAnalysisResult } from "../_lib/analysis-result-store";
+import { fallbackAnalysisResult, getAnalysisResult } from "../_lib/analysis-result-store";
 import { getUploadedPreviews, type UploadedPreview } from "../_lib/upload-preview-store";
 
 export default function HasilAnalisaPage() {
-  const [analysisResult] = useState(() => getAnalysisResult());
-  const [uploadedPreviews] = useState<UploadedPreview[]>(() => getUploadedPreviews());
+  const [analysisResult, setAnalysisResult] = useState(fallbackAnalysisResult);
+  const [uploadedPreviews, setUploadedPreviews] = useState<UploadedPreview[]>([]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setAnalysisResult(getAnalysisResult());
+      setUploadedPreviews(getUploadedPreviews());
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
   const confidence = analysisResult.confidence;
   const riskTone =
     analysisResult.riskLevel === "high"
@@ -94,20 +104,20 @@ export default function HasilAnalisaPage() {
           </aside>
 
           <div className="space-y-6">
-            <section className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-card sm:p-6">
-              <div className="mb-5 flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-blue-600">
-                  <Icon name="shield" className="h-5 w-5" />
-                </span>
-                <div>
-                  <h2 className="text-xl font-extrabold text-slate-950">Gambar Diunggah</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Screenshot percakapan yang menjadi bahan analisis.
-                  </p>
+            {uploadedPreviews.length > 0 && (
+              <section className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-card sm:p-6">
+                <div className="mb-5 flex items-center gap-3">
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-blue-600">
+                    <Icon name="shield" className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h2 className="text-xl font-extrabold text-slate-950">Gambar Diunggah</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Screenshot percakapan yang menjadi bahan analisis.
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {uploadedPreviews.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {uploadedPreviews.map((preview, index) => (
                     <figure key={`${preview.name}-${index}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
@@ -123,13 +133,8 @@ export default function HasilAnalisaPage() {
                     </figure>
                   ))}
                 </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-blue-200 bg-blue-50/60 p-5 text-sm leading-7 text-slate-600">
-                  Belum ada gambar yang tersedia untuk ditampilkan. Upload gambar dari halaman
-                  utama, lalu buka hasil analisis melalui tombol yang muncul setelah upload.
-                </div>
-              )}
-            </section>
+              </section>
+            )}
 
             <section className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-card sm:p-6">
               <div className="mb-5 flex items-center gap-3">
