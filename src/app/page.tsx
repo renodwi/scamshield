@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ChangeEvent, DragEvent } from "react";
 import { useRef, useState } from "react";
 import { SiteFooter } from "./_components/site-footer";
 import { SiteHeader } from "./_components/site-header";
-import { saveUploadedPreviews } from "./_lib/upload-preview-store";
+import { saveAnalysisResult } from "./_lib/analysis-result-store";
+import { clearUploadedPreviews, saveUploadedPreviews } from "./_lib/upload-preview-store";
 
 type IconName =
   | "shield-check"
@@ -137,12 +138,18 @@ function Icon({
 }
 
 export default function Home() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"upload" | "text">("upload");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileNames, setFileNames] = useState<string[]>([]);
+  const [filePreviewUrls, setFilePreviewUrls] = useState<string[]>([]);
   const [isDropActive, setIsDropActive] = useState(false);
   const [chatText, setChatText] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStatus, setAnalysisStatus] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const toastTimerRef = useRef<number | undefined>(undefined);
+  const statusTimersRef = useRef<number[]>([]);
 
   const trimmedLength = chatText.trim().length;
   const isUpload = activeTab === "upload";
@@ -187,7 +194,12 @@ export default function Home() {
 
     if (!files.every(validateFile)) return;
 
+    setSelectedFiles(files);
     setFileNames(files.map((file) => file.name));
+    setFilePreviewUrls((currentUrls) => {
+      currentUrls.forEach((url) => URL.revokeObjectURL(url));
+      return files.map((file) => URL.createObjectURL(file));
+    });
     saveUploadedPreviews(files);
     showToast(`${files.length} screenshot siap dianalisis.`);
   }
@@ -210,6 +222,79 @@ export default function Home() {
     event.preventDefault();
     setIsDropActive(false);
     handleFiles(event.dataTransfer.files);
+  }
+
+  async function handleAnalyze() {
+    if (isAnalyzing) return;
+
+    const isTextMode = activeTab === "text";
+    const trimmedText = chatText.trim();
+
+    if (!isTextMode && selectedFiles.length === 0) {
+      showToast("Pilih minimal 1 gambar untuk diperiksa.");
+      return;
+    }
+
+    if (isTextMode && trimmedText.length < 20) {
+      showToast("Masukkan minimal 20 karakter percakapan.");
+      return;
+    }
+
+    const formData = new FormData();
+
+    if (isTextMode) {
+      formData.append("chatText", trimmedText);
+      clearUploadedPreviews();
+    } else {
+      selectedFiles.forEach((file) => formData.append("images", file));
+    }
+
+    startAnalysisStatus();
+    setIsAnalyzing(true);
+
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Analisis gagal diproses.");
+      }
+
+      saveAnalysisResult(data.result);
+      router.push("/hasil-analisa");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Analisis gagal diproses.";
+      showToast(message);
+    } finally {
+      stopAnalysisStatus();
+      setIsAnalyzing(false);
+    }
+  }
+
+  function startAnalysisStatus() {
+    stopAnalysisStatus();
+    setAnalysisStatus("Periksa sedang dimulai...");
+
+    const messages = [
+      "AI membaca percakapan...",
+      "AI memeriksa secara mendalam...",
+      "AI menyusun hasil analisis...",
+    ];
+
+    statusTimersRef.current = messages.map((message, index) =>
+      window.setTimeout(() => {
+        setAnalysisStatus(message);
+      }, (index + 1) * 1400),
+    );
+  }
+
+  function stopAnalysisStatus() {
+    statusTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    statusTimersRef.current = [];
+    setAnalysisStatus("");
   }
 
   return (
@@ -323,7 +408,7 @@ export default function Home() {
                   </div>
 
                   {fileNames.length > 0 ? (
-                    <div className="mt-5 w-full max-w-md">
+                    <div className="mt-5 w-full max-w-xl">
                       <p className="text-lg font-bold text-slate-900 sm:text-xl">{fileNames.length} gambar dipilih</p>
                       <ul className="mt-3 space-y-2 rounded-2xl bg-white/75 p-3 text-left text-sm font-medium text-slate-600 shadow-sm">
                         {fileNames.map((name, index) => (
@@ -332,6 +417,18 @@ export default function Home() {
                           </li>
                         ))}
                       </ul>
+                      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                        {filePreviewUrls.map((url, index) => (
+                          <div key={`${url}-${index}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <div
+                              className="aspect-square bg-slate-50 bg-contain bg-center bg-no-repeat"
+                              role="img"
+                              aria-label={`Preview gambar ${index + 1}`}
+                              style={{ backgroundImage: `url(${url})` }}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ) : (
                     <p className="mt-5 text-lg font-bold text-slate-900 sm:text-xl">Drag & drop screenshot di sini</p>
@@ -350,15 +447,22 @@ export default function Home() {
                   <p>Data Anda aman dan tidak akan dibagikan ke pihak ketiga.</p>
                 </div>
 
-                {fileNames.length > 0 ? (
-                  <Link
-                    href="/hasil-analisa"
-                    className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 sm:w-auto"
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  {analysisStatus ? (
+                    <p className="text-sm font-semibold text-blue-700">{analysisStatus}</p>
+                  ) : (
+                    <p className="text-sm text-slate-500">Pilih gambar, lalu mulai pemeriksaan AI.</p>
+                  )}
+                  <button
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none sm:w-auto"
+                    type="button"
+                    disabled={selectedFiles.length === 0 || isAnalyzing}
+                    onClick={handleAnalyze}
                   >
                     <Icon name="scan-search" className="h-5 w-5" />
-                    Lihat Hasil Analisis
-                  </Link>
-                ) : null}
+                    {isAnalyzing ? "Memeriksa..." : "Mulai Periksa"}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="pt-5">
@@ -375,13 +479,18 @@ export default function Home() {
                   <button
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
                     type="button"
-                    disabled={trimmedLength < 20}
-                    onClick={() => showToast("Demo: teks sudah diterima. Hubungkan ke API analisis untuk proses nyata.")}
+                    disabled={trimmedLength < 20 || isAnalyzing}
+                    onClick={handleAnalyze}
                   >
                     <Icon name="scan-search" className="h-5 w-5" />
-                    Analisis Teks
+                    {isAnalyzing ? "Memeriksa..." : "Mulai Periksa"}
                   </button>
                 </div>
+                {analysisStatus ? (
+                  <div className="mt-4 rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+                    {analysisStatus}
+                  </div>
+                ) : null}
               </div>
             )}
           </div>

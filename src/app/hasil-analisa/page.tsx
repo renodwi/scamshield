@@ -5,29 +5,28 @@ import { useState } from "react";
 import { Icon } from "../_components/icon";
 import { SiteFooter } from "../_components/site-footer";
 import { SiteHeader } from "../_components/site-header";
+import { getAnalysisResult } from "../_lib/analysis-result-store";
 import { getUploadedPreviews, type UploadedPreview } from "../_lib/upload-preview-store";
 
-const findings = [
-  {
-    title: "Permintaan pembayaran mencurigakan",
-    body: "Penjual mengarahkan ke link pembayaran eksternal yang tidak sesuai dengan platform resmi.",
-    tone: "warning",
-  },
-  {
-    title: "Bahasa urgensi / tekanan",
-    body: "Ada indikasi mendorong untuk transfer cepat dengan alasan harga akan naik.",
-    tone: "attention",
-  },
-  {
-    title: "Ketidakkonsistenan akun",
-    body: "Penolakan COD tanpa alasan jelas dapat menjadi indikasi risiko.",
-    tone: "neutral",
-  },
-];
-
 export default function HasilAnalisaPage() {
-  const confidence = 78;
+  const [analysisResult] = useState(() => getAnalysisResult());
   const [uploadedPreviews] = useState<UploadedPreview[]>(() => getUploadedPreviews());
+  const confidence = analysisResult.confidence;
+  const riskTone =
+    analysisResult.riskLevel === "high"
+      ? {
+          text: "text-red-600",
+          badge: "bg-red-100 text-red-500",
+        }
+      : analysisResult.riskLevel === "low"
+        ? {
+            text: "text-emerald-600",
+            badge: "bg-emerald-100 text-emerald-600",
+          }
+        : {
+            text: "text-orange-600",
+            badge: "bg-orange-100 text-orange-500",
+          };
 
   return (
     <>
@@ -59,13 +58,13 @@ export default function HasilAnalisaPage() {
           <aside className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-card sm:p-6 lg:sticky lg:top-24">
             <div className="flex items-start justify-between gap-5">
               <div className="flex min-w-0 gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-orange-100 text-orange-500">
+                <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${riskTone.badge}`}>
                   <Icon name="triangle-alert" className="h-6 w-6" />
                 </span>
                 <div>
-                  <h2 className="text-xl font-extrabold text-orange-600">Risiko Sedang</h2>
+                  <h2 className={`text-xl font-extrabold ${riskTone.text}`}>{analysisResult.riskLabel}</h2>
                   <p className="mt-4 text-sm font-medium leading-6 text-slate-600">
-                    Percakapan ini memiliki beberapa indikasi yang perlu diwaspadai.
+                    {analysisResult.summary}
                   </p>
                 </div>
               </div>
@@ -89,10 +88,7 @@ export default function HasilAnalisaPage() {
             <div className="mt-6 rounded-2xl bg-blue-50 p-4">
               <p className="text-sm font-bold text-blue-700">Penjelasan AI</p>
               <p className="mt-2 text-sm leading-7 text-slate-600">
-                AI menemukan kombinasi sinyal risiko: instruksi pembayaran di luar kanal resmi,
-                dorongan untuk segera transfer, dan informasi akun yang tidak konsisten. Risiko
-                belum berada di tingkat tertinggi, tetapi transaksi sebaiknya ditunda sampai sumber
-                dan metode pembayaran diverifikasi.
+                {analysisResult.aiExplanation}
               </p>
             </div>
           </aside>
@@ -144,18 +140,18 @@ export default function HasilAnalisaPage() {
               </div>
 
               <div className="space-y-4">
-                {findings.map((finding) => (
+                {analysisResult.findings.map((finding) => (
                   <article key={finding.title} className="flex gap-4 rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
                     <span
                       className={
-                        finding.tone === "warning"
+                        finding.severity === "high"
                           ? "mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-orange-100 text-orange-500"
-                          : finding.tone === "attention"
+                          : finding.severity === "medium"
                             ? "mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-500"
-                            : "mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blue-100 text-blue-600"
+                            : "mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-600"
                       }
                     >
-                      {finding.tone === "neutral" ? (
+                      {finding.severity === "low" ? (
                         <Icon name="shield" className="h-5 w-5" />
                       ) : (
                         <Icon name="triangle-alert" className="h-5 w-5" />
@@ -163,7 +159,7 @@ export default function HasilAnalisaPage() {
                     </span>
                     <div>
                       <h3 className="font-extrabold text-slate-950">{finding.title}</h3>
-                      <p className="mt-1 text-sm leading-6 text-slate-600">{finding.body}</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">{finding.description}</p>
                     </div>
                   </article>
                 ))}
@@ -178,9 +174,7 @@ export default function HasilAnalisaPage() {
                 <div>
                   <h2 className="text-lg font-extrabold text-slate-950">Rekomendasi</h2>
                   <p className="mt-2 text-sm leading-7 text-slate-600">
-                    Sebaiknya tunda transaksi dan lakukan verifikasi tambahan. Gunakan platform
-                    resmi atau metode pembayaran aman, hindari tautan eksternal, dan jangan
-                    bagikan data pribadi sebelum identitas pihak lain jelas.
+                    {analysisResult.recommendation}
                   </p>
                 </div>
               </div>

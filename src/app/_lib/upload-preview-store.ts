@@ -27,3 +27,13 @@ export function getUploadedPreviews() {
 
   return window.scamShieldUploadedPreviews ?? [];
 }
+
+export function clearUploadedPreviews() {
+  if (typeof window === "undefined") return;
+
+  window.scamShieldUploadedPreviews?.forEach((preview) => {
+    URL.revokeObjectURL(preview.url);
+  });
+
+  window.scamShieldUploadedPreviews = [];
+}
