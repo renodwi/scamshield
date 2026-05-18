@@ -1,25 +1,36 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "../_components/icon";
 import { SiteFooter } from "../_components/site-footer";
 import { SiteHeader } from "../_components/site-header";
-import { fallbackAnalysisResult, getAnalysisResult } from "../_lib/analysis-result-store";
+import { getAnalysisResult, type AnalysisResult } from "../_lib/analysis-result-store";
 import { getUploadedPreviews, type UploadedPreview } from "../_lib/upload-preview-store";
 
 export default function HasilAnalisaPage() {
-  const [analysisResult, setAnalysisResult] = useState(fallbackAnalysisResult);
+  const router = useRouter();
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [uploadedPreviews, setUploadedPreviews] = useState<UploadedPreview[]>([]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      setAnalysisResult(getAnalysisResult());
+      const storedResult = getAnalysisResult();
+
+      if (!storedResult) {
+        router.replace("/");
+        return;
+      }
+
+      setAnalysisResult(storedResult);
       setUploadedPreviews(getUploadedPreviews());
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [router]);
+
+  if (!analysisResult) return null;
 
   const confidence = analysisResult.confidence;
   const riskTone =

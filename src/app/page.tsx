@@ -527,7 +527,9 @@ export default function Home() {
                 <Icon name="lock" className="h-6 w-6 text-emerald-600" />
                 <h2 className="text-lg font-extrabold">Privasi Terjamin</h2>
               </div>
-              <p className="text-sm leading-7 text-slate-600">Semua data diproses secara aman dan tidak disimpan secara permanen.</p>
+              <p className="text-sm leading-7 text-slate-600">
+                Hasil analisis disimpan di perangkat Anda agar bisa dibuka kembali, tanpa dibagikan ke pihak ketiga.
+              </p>
             </section>
 
             <section id="tentang" className="mt-8">
