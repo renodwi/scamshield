@@ -16,18 +16,19 @@ export type AnalysisResult = {
   recommendation: string;
 };
 
-const STORAGE_KEY = "scamShieldAnalysisResult";
+export const ANALYSIS_RESULT_STORAGE_KEY = "scamShieldAnalysisResult";
+const DEVICE_ID_STORAGE_KEY = "scamShieldDeviceId";
 
 export function saveAnalysisResult(result: AnalysisResult) {
   if (typeof window === "undefined") return;
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
+  localStorage.setItem(ANALYSIS_RESULT_STORAGE_KEY, JSON.stringify(result));
 }
 
 export function getAnalysisResult() {
   if (typeof window === "undefined") return null;
 
-  const stored = localStorage.getItem(STORAGE_KEY);
+  const stored = localStorage.getItem(ANALYSIS_RESULT_STORAGE_KEY);
 
   if (!stored) return null;
 
@@ -36,4 +37,21 @@ export function getAnalysisResult() {
   } catch {
     return null;
   }
+}
+
+export function getAnalysisDeviceId() {
+  if (typeof window === "undefined") return "";
+
+  const stored = localStorage.getItem(DEVICE_ID_STORAGE_KEY);
+
+  if (stored) return stored;
+
+  const generated =
+    typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+
+  localStorage.setItem(DEVICE_ID_STORAGE_KEY, generated);
+
+  return generated;
 }

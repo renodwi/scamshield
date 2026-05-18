@@ -5,7 +5,7 @@ import type { ChangeEvent, DragEvent } from "react";
 import { useRef, useState } from "react";
 import { SiteFooter } from "./_components/site-footer";
 import { SiteHeader } from "./_components/site-header";
-import { saveAnalysisResult } from "./_lib/analysis-result-store";
+import { getAnalysisDeviceId, saveAnalysisResult } from "./_lib/analysis-result-store";
 import { clearUploadedPreviews, saveUploadedPreviews } from "./_lib/upload-preview-store";
 
 type IconName =
@@ -25,6 +25,7 @@ type IconName =
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_FILE_COUNT = 5;
+const MAX_CHAT_TEXT_LENGTH = 8_000;
 const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
 
 const iconPaths: Record<IconName, React.ReactNode> = {
@@ -255,6 +256,9 @@ export default function Home() {
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
+        headers: {
+          "x-scamshield-device-id": getAnalysisDeviceId(),
+        },
         body: formData,
       });
       const data = await response.json();
@@ -471,6 +475,7 @@ export default function Home() {
                   className="min-h-[260px] w-full resize-none rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-sm leading-7 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
                   placeholder="Paste teks percakapan mencurigakan di sini..."
                   value={chatText}
+                  maxLength={MAX_CHAT_TEXT_LENGTH}
                   onChange={(event) => setChatText(event.target.value)}
                 />
 
