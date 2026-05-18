@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import type { ChangeEvent, DragEvent } from "react";
 import { useRef, useState } from "react";
 import { SiteFooter } from "./_components/site-footer";
 import { SiteHeader } from "./_components/site-header";
+import { saveUploadedPreviews } from "./_lib/upload-preview-store";
 
 type IconName =
   | "shield-check"
@@ -186,6 +188,7 @@ export default function Home() {
     if (!files.every(validateFile)) return;
 
     setFileNames(files.map((file) => file.name));
+    saveUploadedPreviews(files);
     showToast(`${files.length} screenshot siap dianalisis.`);
   }
 
@@ -346,6 +349,16 @@ export default function Home() {
                   <Icon name="lock-keyhole" className="mt-0.5 h-5 w-5 shrink-0" />
                   <p>Data Anda aman dan tidak akan dibagikan ke pihak ketiga.</p>
                 </div>
+
+                {fileNames.length > 0 ? (
+                  <Link
+                    href="/hasil-analisa"
+                    className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 sm:w-auto"
+                  >
+                    <Icon name="scan-search" className="h-5 w-5" />
+                    Lihat Hasil Analisis
+                  </Link>
+                ) : null}
               </div>
             ) : (
               <div className="pt-5">

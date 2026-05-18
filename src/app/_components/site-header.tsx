@@ -13,7 +13,7 @@ const navItems: { href: string; label: string; page: ActivePage }[] = [
   { href: "/tentang-kami", label: "Tentang Kami", page: "tentang-kami" },
 ];
 
-export function SiteHeader({ activePage }: { activePage: ActivePage }) {
+export function SiteHeader({ activePage }: { activePage?: ActivePage }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
