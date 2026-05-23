@@ -336,6 +336,10 @@ export default function Home() {
               Upload screenshot atau paste teks percakapan untuk mendeteksi potensi penipuan dengan AI.
             </p>
 
+            <div className="mt-5 p-3 bg-blue-600 text-xl font-black text-white">
+              Didukung oleh Gemini AI.
+            </div>
+
             <div className="mt-6 hidden items-center gap-3 text-sm font-semibold text-slate-700 sm:flex">
               <span className="grid h-8 w-8 place-items-center rounded-xl bg-blue-600 text-white">
                 <Icon name="shield-check" className="h-4 w-4" />
@@ -561,7 +565,7 @@ export default function Home() {
                 </li>
                 <li className="relative flex gap-4">
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">2</span>
-                  <p className="pt-1 text-sm leading-6 text-slate-600">AI kami akan menganalisis konten percakapan.</p>
+                  <p className="pt-1 text-sm leading-6 text-slate-600">AI akan menganalisis konten percakapan.</p>
                 </li>
                 <li className="relative flex gap-4">
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">3</span>
@@ -578,7 +582,7 @@ export default function Home() {
                 <h2 className="text-lg font-extrabold">Privasi Terjamin</h2>
               </div>
               <p className="text-sm leading-7 text-slate-600">
-                Hasil analisis disimpan di perangkat Anda agar bisa dibuka kembali, tanpa dibagikan ke pihak ketiga.
+                Hasil analisis dapat disimpan di perangkat Anda agar bisa dibuka kembali, tanpa dibagikan ke pihak ketiga.
               </p>
             </section>
 
