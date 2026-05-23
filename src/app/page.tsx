@@ -26,6 +26,7 @@ type IconName =
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_FILE_COUNT = 5;
 const MAX_CHAT_TEXT_LENGTH = 8_000;
+const MAX_ADDITIONAL_INFO_LENGTH = 1_000;
 const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
 
 const iconPaths: Record<IconName, React.ReactNode> = {
@@ -146,6 +147,8 @@ export default function Home() {
   const [filePreviewUrls, setFilePreviewUrls] = useState<string[]>([]);
   const [isDropActive, setIsDropActive] = useState(false);
   const [chatText, setChatText] = useState("");
+  const [useAdditionalInfo, setUseAdditionalInfo] = useState(false);
+  const [additionalInfo, setAdditionalInfo] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState("");
   const [toastMessage, setToastMessage] = useState("");
@@ -153,6 +156,7 @@ export default function Home() {
   const statusTimersRef = useRef<number[]>([]);
 
   const trimmedLength = chatText.trim().length;
+  const trimmedAdditionalInfo = additionalInfo.trim();
   const isUpload = activeTab === "upload";
 
   function showToast(message: string) {
@@ -248,6 +252,10 @@ export default function Home() {
       clearUploadedPreviews();
     } else {
       selectedFiles.forEach((file) => formData.append("images", file));
+
+      if (useAdditionalInfo && trimmedAdditionalInfo) {
+        formData.append("additionalInfo", trimmedAdditionalInfo);
+      }
     }
 
     startAnalysisStatus();
@@ -445,6 +453,43 @@ export default function Home() {
 
                   <p className="mt-5 text-sm text-slate-500">Format: PNG, JPG, JPEG, WebP (Maks. 10MB per file, maks. 5 gambar)</p>
                 </label>
+
+                <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-extrabold text-slate-950">Informasi Tambahan</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">
+                        Tambahkan konteks singkat agar AI membaca screenshot dengan lebih tepat.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      aria-pressed={useAdditionalInfo}
+                      className={`${useAdditionalInfo ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "bg-white text-blue-700 shadow-sm"} inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-blue-100 px-4 py-2.5 text-sm font-bold transition hover:border-blue-300`}
+                      onClick={() => setUseAdditionalInfo((value) => !value)}
+                    >
+                      <Icon name="sparkles" className="h-4 w-4" />
+                      {useAdditionalInfo ? "Konteks Aktif" : "Tambah Konteks"}
+                    </button>
+                  </div>
+
+                  {useAdditionalInfo ? (
+                    <div className="mt-4">
+                      <textarea
+                        rows={4}
+                        className="w-full resize-none rounded-2xl border border-blue-100 bg-white p-4 text-sm leading-7 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                        placeholder="Contoh: akun ini mengaku dari bank, meminta kode OTP, atau percakapan terjadi setelah klik iklan..."
+                        value={additionalInfo}
+                        maxLength={MAX_ADDITIONAL_INFO_LENGTH}
+                        onChange={(event) => setAdditionalInfo(event.target.value)}
+                      />
+                      <div className="mt-2 flex items-center justify-between gap-3 text-xs font-semibold text-slate-500">
+                        <span>Opsional, boleh dikosongkan.</span>
+                        <span>{trimmedAdditionalInfo.length}/{MAX_ADDITIONAL_INFO_LENGTH}</span>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
 
                 <div className="mt-5 flex items-start gap-3 rounded-2xl bg-blue-50 px-4 py-4 text-sm font-medium text-blue-700">
                   <Icon name="lock-keyhole" className="mt-0.5 h-5 w-5 shrink-0" />

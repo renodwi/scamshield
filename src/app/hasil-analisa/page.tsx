@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "../_components/icon";
 import { SiteFooter } from "../_components/site-footer";
 import { SiteHeader } from "../_components/site-header";
-import { ANALYSIS_RESULT_STORAGE_KEY, getAnalysisResult, type AnalysisResult } from "../_lib/analysis-result-store";
+import { getAnalysisResult, type AnalysisResult } from "../_lib/analysis-result-store";
 import { getUploadedPreviews, type UploadedPreview } from "../_lib/upload-preview-store";
 
 export default function HasilAnalisaPage() {
+  const router = useRouter();
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [uploadedPreviews, setUploadedPreviews] = useState<UploadedPreview[]>([]);
 
@@ -17,7 +19,7 @@ export default function HasilAnalisaPage() {
       const storedResult = getAnalysisResult();
 
       if (!storedResult) {
-        window.location.replace("/");
+        router.replace("/");
         return;
       }
 
@@ -26,19 +28,10 @@ export default function HasilAnalisaPage() {
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [router]);
 
   if (!analysisResult) {
-    return (
-      <>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{if(!localStorage.getItem(${JSON.stringify(ANALYSIS_RESULT_STORAGE_KEY)})){location.replace("/")}}catch{location.replace("/")}`,
-          }}
-        />
-        <main className="hidden" aria-hidden="true" />
-      </>
-    );
+    return <main className="hidden" aria-hidden="true" />;
   }
 
   const confidence = analysisResult.confidence;
