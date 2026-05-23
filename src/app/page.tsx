@@ -497,7 +497,7 @@ export default function Home() {
 
                 <div className="mt-5 flex items-start gap-3 rounded-2xl bg-blue-50 px-4 py-4 text-sm font-medium text-blue-700">
                   <Icon name="lock-keyhole" className="mt-0.5 h-5 w-5 shrink-0" />
-                  <p>Data Anda aman dan tidak akan dibagikan ke pihak ketiga.</p>
+                  <p>Data Anda hanya digunakan untuk memproses analisis AI dan menampilkan hasil pemeriksaan.</p>
                 </div>
 
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -582,7 +582,7 @@ export default function Home() {
                 <h2 className="text-lg font-extrabold">Privasi Terjamin</h2>
               </div>
               <p className="text-sm leading-7 text-slate-600">
-                Hasil analisis dapat disimpan di perangkat Anda agar bisa dibuka kembali, tanpa dibagikan ke pihak ketiga.
+                Hasil analisis disimpan di perangkat Anda agar bisa dibuka kembali setelah pemeriksaan selesai.
               </p>
             </section>
 

@@ -122,7 +122,7 @@ export async function POST(request: Request) {
   if (!apiKey) {
     return Response.json(
       {
-        error: "GEMINI_API_KEY belum diatur. Salin .env.example ke .env.local lalu isi API key Gemini Anda.",
+        error: "Layanan analisis belum siap. Hubungi pengelola website.",
       },
       { status: 500 },
     );
