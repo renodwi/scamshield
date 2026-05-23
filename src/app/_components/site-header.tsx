@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { Icon } from "./icon";
 
-type ActivePage = "beranda" | "cara-kerja" | "tips-aman" | "tentang-kami";
+type ActivePage = "beranda" | "cara-kerja" | "tips-aman" | "tentang-kami" | "riwayat";
 
 const navItems: { href: string; label: string; page: ActivePage }[] = [
   { href: "/", label: "Beranda", page: "beranda" },
   { href: "/cara-kerja", label: "Cara Kerja", page: "cara-kerja" },
   { href: "/tips-aman", label: "Tips Aman", page: "tips-aman" },
+  { href: "/riwayat", label: "Riwayat", page: "riwayat" },
   { href: "/tentang-kami", label: "Tentang Kami", page: "tentang-kami" },
 ];
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ConfidenceMeter } from "../_components/confidence-meter";
 import { Icon } from "../_components/icon";
 import { SiteFooter } from "../_components/site-footer";
 import { SiteHeader } from "../_components/site-header";
@@ -41,6 +42,11 @@ export default function HasilAnalisaPage() {
           text: "text-red-600",
           badge: "bg-red-100 text-red-500",
         }
+      : analysisResult.riskLevel === "safe"
+        ? {
+            text: "text-emerald-600",
+            badge: "bg-emerald-100 text-emerald-600",
+          }
       : analysisResult.riskLevel === "low"
         ? {
             text: "text-emerald-600",
@@ -89,22 +95,8 @@ export default function HasilAnalisaPage() {
                   <p className="mt-4 text-sm font-medium leading-6 text-slate-600">
                     {analysisResult.summary}
                   </p>
+                  <ConfidenceMeter value={confidence} />
                 </div>
-              </div>
-
-              <div className="shrink-0 text-center">
-                <div
-                  className="grid h-16 w-16 place-items-center rounded-full"
-                  style={{
-                    background: `conic-gradient(#2563eb ${confidence}%, #dbeafe ${confidence}% 100%)`,
-                  }}
-                  aria-label={`Confidence ${confidence}%`}
-                >
-                  <div className="grid h-11 w-11 place-items-center rounded-full bg-white">
-                    <span className="text-sm font-extrabold text-slate-950">{confidence}%</span>
-                  </div>
-                </div>
-                <p className="mt-2 text-xs font-bold text-slate-500">Confidence</p>
               </div>
             </div>
 
@@ -159,11 +151,20 @@ export default function HasilAnalisaPage() {
 
               <div className="space-y-4">
                 {analysisResult.findings.map((finding) => (
-                  <article key={finding.title} className="flex gap-4 rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+                  <article
+                    key={finding.title}
+                    className={
+                      finding.severity === "high"
+                        ? "flex gap-4 rounded-2xl border border-red-100 bg-red-50/70 p-4"
+                        : finding.severity === "medium"
+                          ? "flex gap-4 rounded-2xl border border-amber-100 bg-amber-50/70 p-4"
+                          : "flex gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4"
+                    }
+                  >
                     <span
                       className={
                         finding.severity === "high"
-                          ? "mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-orange-100 text-orange-500"
+                          ? "mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-red-100 text-red-500"
                           : finding.severity === "medium"
                             ? "mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-500"
                             : "mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-600"
@@ -178,6 +179,9 @@ export default function HasilAnalisaPage() {
                     <div>
                       <h3 className="font-extrabold text-slate-950">{finding.title}</h3>
                       <p className="mt-1 text-sm leading-6 text-slate-600">{finding.description}</p>
+                      <blockquote className="mt-3 rounded-xl border border-white/80 bg-white/75 px-3 py-2 text-sm font-semibold text-slate-700">
+                        Bukti: {finding.evidence}
+                      </blockquote>
                     </div>
                   </article>
                 ))}

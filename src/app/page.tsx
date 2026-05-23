@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { SiteFooter } from "./_components/site-footer";
 import { SiteHeader } from "./_components/site-header";
 import { getAnalysisDeviceId, saveAnalysisResult } from "./_lib/analysis-result-store";
+import { extractTextFromImage } from "./_lib/ocr";
 import { clearUploadedPreviews, saveUploadedPreviews } from "./_lib/upload-preview-store";
 
 type IconName =
@@ -150,6 +151,7 @@ export default function Home() {
   const [useAdditionalInfo, setUseAdditionalInfo] = useState(false);
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const toastTimerRef = useRef<number | undefined>(undefined);
@@ -247,10 +249,22 @@ export default function Home() {
 
     const formData = new FormData();
 
+    let combinedChatText = trimmedText;
+
     if (isTextMode) {
       formData.append("chatText", trimmedText);
       clearUploadedPreviews();
     } else {
+      setIsOcrProcessing(true);
+      setAnalysisStatus("OCR membaca teks pada gambar...");
+
+      const ocrText = await extractTextFromImages(selectedFiles);
+      combinedChatText = [trimmedText, ocrText].filter(Boolean).join("\n\n");
+
+      if (combinedChatText) {
+        formData.append("chatText", combinedChatText);
+      }
+
       selectedFiles.forEach((file) => formData.append("images", file));
 
       if (useAdditionalInfo && trimmedAdditionalInfo) {
@@ -275,15 +289,27 @@ export default function Home() {
         throw new Error(data.error || "Analisis gagal diproses.");
       }
 
-      saveAnalysisResult(data.result);
+      saveAnalysisResult(data.result, combinedChatText || trimmedAdditionalInfo);
       router.push("/hasil-analisa");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Analisis gagal diproses.";
       showToast(message);
     } finally {
       stopAnalysisStatus();
+      setIsOcrProcessing(false);
       setIsAnalyzing(false);
     }
+  }
+
+  async function extractTextFromImages(files: File[]) {
+    const extractedTexts: string[] = [];
+
+    for (const [index, file] of files.entries()) {
+      setAnalysisStatus(`OCR membaca gambar ${index + 1}/${files.length}...`);
+      extractedTexts.push(await extractTextFromImage(file));
+    }
+
+    return extractedTexts.filter(Boolean).join("\n\n");
   }
 
   function startAnalysisStatus() {
@@ -502,7 +528,12 @@ export default function Home() {
 
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   {analysisStatus ? (
-                    <p className="text-sm font-semibold text-blue-700">{analysisStatus}</p>
+                    <p className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700">
+                      {isOcrProcessing ? (
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
+                      ) : null}
+                      {analysisStatus}
+                    </p>
                   ) : (
                     <p className="text-sm text-slate-500">Pilih gambar, lalu mulai pemeriksaan AI.</p>
                   )}
@@ -513,7 +544,7 @@ export default function Home() {
                     onClick={handleAnalyze}
                   >
                     <Icon name="scan-search" className="h-5 w-5" />
-                    {isAnalyzing ? "Memeriksa..." : "Mulai Periksa"}
+                    {isOcrProcessing ? "Membaca OCR..." : isAnalyzing ? "Memeriksa..." : "Mulai Periksa"}
                   </button>
                 </div>
               </div>
