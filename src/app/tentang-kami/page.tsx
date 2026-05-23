@@ -48,7 +48,7 @@ export default function TentangKamiPage() {
             <div className="mt-5 space-y-4 text-base leading-8 text-slate-700 sm:text-lg sm:leading-9">
               <p>
                 Terima kasih telah mencoba website sederhana ini. Website ini dibuat tujuannya adalah untuk
-                menyelesaikan tantangan dari #JuaraVibeCoding.
+                menyelesaikan tantangan dari <span className="font-semibold">#JuaraVibeCoding</span>.
               </p>
               <p>
                 Website ini terinspirasi dari teman saya yang dimana waktu itu dia pernah terkena scam yang jumlahnya
